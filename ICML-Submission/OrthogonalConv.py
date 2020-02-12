@@ -4,7 +4,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.keras.initializers import RandomUniform
 
 class NetXCycle(Layer):
-    def __init__(self, output_shape, kernel_shape=(3,3), activation=lambda x: tensorflow.keras.layers.PReLU()(x), dropout_rate=0.0, kernel_regularizer=None, **kwargs):
+    def __init__(self, output_shape, kernel_shape=(3,3), activation='relu', dropout_rate=0.0, kernel_regularizer=None, **kwargs):
         '''
         output_shape shape of the output tensor
         kernel_shape shape of the kernel, defaults to (3,3)
@@ -21,9 +21,9 @@ class NetXCycle(Layer):
 
         # input_shape has (batch_size, x, y, z[features])
         # permutation: x y z -> z' x y -> y' z' x -> x' y' z'
-        self._conv2D_a = Conv2D(filters=self._output_shape[2],kernel_size=self._kernel_shape,kernel_regularizer=self._kernel_regularizer,padding='same', kernel_initializer = 'he_uniform')
-        self._conv2D_b = Conv2D(filters=self._output_shape[1],kernel_size=self._kernel_shape,kernel_regularizer=self._kernel_regularizer,padding='same', kernel_initializer = 'he_uniform')
-        self._conv2D_c = Conv2D(filters=self._output_shape[0],kernel_size=self._kernel_shape,kernel_regularizer=self._kernel_regularizer,padding='same', kernel_initializer = 'he_uniform')
+        self._conv2D_a = Conv2D(filters=self._output_shape[2],kernel_size=self._kernel_shape,kernel_regularizer=self._kernel_regularizer,padding='same')
+        self._conv2D_b = Conv2D(filters=self._output_shape[1],kernel_size=self._kernel_shape,kernel_regularizer=self._kernel_regularizer,padding='same')
+        self._conv2D_c = Conv2D(filters=self._output_shape[0],kernel_size=self._kernel_shape,kernel_regularizer=self._kernel_regularizer,padding='same')
         
         self._batch_norm_a = BatchNormalization(axis=3) #, center=False, scale=False)
         self._batch_norm_b = BatchNormalization(axis=1) #, center=False, scale=False)
