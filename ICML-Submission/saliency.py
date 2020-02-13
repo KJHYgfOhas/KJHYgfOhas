@@ -7,11 +7,13 @@ from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 from tensorflow.keras.activations import softmax
 
+
+# change to vis saliency map
 def VisualizeImageGrayscale(image_3d):
     '''
     Returns a 3D tensor as a grayscale 2D tensor by summing the absolute values over the last axis and scaling the results to the interval [0,1].
-    :param image3d: the 3d tensor which is to be grey scaled. A 3d numpy array.
-    :return: numpy array of dimension shape_of_first_two_axes_of_image_3d that contains the 2d grey_scale image.
+    :param image3d: A 3d numpy array of shape (H, W, C).
+    :return: numpy array of shape (H, W) that contains the 2d grey_scale image.
     '''
 
     image_2d = np.sum(np.abs(image_3d), axis=2)
@@ -25,14 +27,12 @@ def get_saliency_maps_and_fitted_ellipses(model, layers_index_list, no_of_nodes,
     gradients = get_gradients_at_layers(model, layers_index_list, no_of_nodes, image)
     reshaped_grads = np.reshape(gradients, (gradients.shape[0] * gradients.shape[1],) + gradients.shape[2:])
 
-    saliency_map = np.empty(reshaped_grads.shape[0:-1])
+    saliency_map = np.full(reshaped_grads.shape[0:-1], np.nan)
     
     for i, gradient in enumerate(reshaped_grads):
-        print('iteration', i)
         saliency_map[i] = VisualizeImageGrayscale(gradient) 
     
-    print('the shape is ', saliency_map.shape)
-    ellipses = plot_ellipse(saliency_map)
+    ellipses = generate_ellipses(saliency_map)
     saliency_map = np.reshape(saliency_map, gradients.shape[0:-1])
     ellipses = np.reshape(ellipses, gradients.shape[0:2])
     return saliency_map, ellipses
@@ -43,15 +43,11 @@ def get_saliency_stats(model, layer, no_of_nodes, images_batch):
     
     for i, image in enumerate(images_batch):
         image_gradients = np.squeeze(get_gradients_at_layers(model, [layer], no_of_nodes, image))
-        print('starting image ', i)
         for j, grad in enumerate(image_gradients):
-            print('starting iteration', j)
             saliency_map[i * no_of_nodes + j] = VisualizeImageGrayscale(grad) 
     
     means, eigen_values, _ = generate_stats_for_multiple_saliencies(saliency_map)
     not_empty_grads = np.all(np.logical_not(np.isnan(means)), axis = 1)
-    print(not_empty_grads)
-
     eigen_values = eigen_values[not_empty_grads]
     return np.sqrt(np.sum(eigen_values, axis =1))
 
@@ -108,27 +104,32 @@ def generate_stats_for_multiple_saliencies(saliency_maps):
     print('number of constant pics:', number_of_constant_pics)
     return means, eigen_values, eigen_vectors
 
-def plot_ellipse(grey_scale_saliency, scale_in_std = 2):
+def generate_ellipses(grey_scale_saliency, scale_in_std = 2):
 
     ellipses = np.empty((grey_scale_saliency.shape[0]), dtype = Ellipse)
     ellipses[:] = None
 
-    means, eigen_values, eigen_vectors = generate_stats_for_multiple_saliencies(grey_scale_saliency)
+    centers, eigen_values, eigen_vectors = generate_stats_for_multiple_saliencies(grey_scale_saliency)
     scaled_eigen_values = 2 * np.sqrt(eigen_values) * np.sqrt(scale_in_std)
 
-    count = 0
     for index in range(eigen_values.shape[0]):
-        if not np.all(np.isnan(means[index])):
+        if not np.all(np.isnan(centers[index])):
             angle = np.degrees(np.arctan2(eigen_vectors[index, 1, 1], eigen_vectors[index, 1, 0]))
-            if (angle != 0):
-                count += 1
-            ellipses[index] = Ellipse(xy=means[index], width=scaled_eigen_values[index, 1], \
+            ellipses[index] = Ellipse(xy=centers[index], width=scaled_eigen_values[index, 1], \
                                       height=scaled_eigen_values[index, 0], angle=angle, fill=False, \
                                                   linewidth=2, edgecolor='yellow')
-    print('Number of nonzero angles:', count)
     return ellipses
 
-def get_gradients_at_node(model, node, x, learning_phase=0.):
+def print_images(saliency_map, ellipses):
+    fig = plt.figure(figsize = (8,8))
+    for i in range(0, saliency_map.shape[0]):
+        for j in range(0, saliency_map.shape[1]):
+            axes = fig.add_subplot(saliency_map.shape[0], saliency_map.shape[1], saliency_map.shape[1]*i+j+1)
+            if ellipses[i,j] is not None:
+                axes.add_patch(ellipses[i,j])
+            axes.imshow(saliency_map[i,j])
+
+def get_gradients_at_node(model, node, x, learning_phase=0):
     '''
     :param model: the model to be evaluated, an instance of keras.model.Model
     :param node:  a scalar tensor.
@@ -167,32 +168,3 @@ def get_gradients_at_layers(model, layer_index_list, no_of_nodes, image):
             node = output_layer[node_index]
             saliency_map[i,j] = get_gradients_at_node(model, node, image)
     return saliency_map
-
-'''
-tf.compat.v1.disable_eager_execution()
-
-input_tensor = Input(shape = (2))
-const = tf.constant([[2,0], [0,1]], dtype = 'float32', shape = (2,2))
-res = tf.matmul(input_tensor,const)
-
-model = Model(inputs = input_tensor, outputs = res)
-res = softmax(res)
-model_with_soft_max = Model(inputs = input_tensor, outputs = res)
-
-true_labels = [1, 0]
-x = [1, 1]
-
-node = model_with_soft_max.layers[2].output[0,1]
-saliency = get_gradients_at_node(model, node ,np.array(x))
-print(saliency)
-assert(np.array_equal(saliency, np.array([[2.0, 0.0]])))
-print(saliency)
-'''
-
-'''
-true_labels = [[1, 0], [0, 1]]
-x = [[1, 1], [1, 3]]
-
-saliency = get_saliency_from_predicted_classes(self._model, x, true_labels)
-assert(np.array_equal(np.array(saliency), [[2.0, 0.0], [0.0, 1.0]]))
-'''
