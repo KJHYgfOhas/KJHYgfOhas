@@ -1,4 +1,4 @@
 cd $1
-cat * > "$1.tar.gz"
-tar -xzvf "$1.tar.gz"
-rm "$1.tar.gz"
+cat * > "model.tar.gz"
+tar -xzvf "model.tar.gz"
+rm "model.tar.gz"

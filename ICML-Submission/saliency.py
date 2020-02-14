@@ -91,7 +91,6 @@ def generate_stats_for_multiple_saliencies(saliency_maps):
     eigen_values[:] = np.nan
     means[:] = np.nan
     eigen_vectors[:] = np.nan
-    number_of_constant_pics = 0
 
     for i in range(saliency_maps.shape[0]):
         try:
@@ -100,8 +99,7 @@ def generate_stats_for_multiple_saliencies(saliency_maps):
             eigen_vectors[i] = eig_vecs
             means[i] = [mean_x, mean_y]
         except ValueError:
-            number_of_constant_pics += 1
-    print('number of constant pics:', number_of_constant_pics)
+            pass
     return means, eigen_values, eigen_vectors
 
 def generate_ellipses(grey_scale_saliency, scale_in_std = 2):
