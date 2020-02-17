@@ -181,6 +181,25 @@ def print_images(saliency_map, ellipses):
             axes.imshow(saliency_map[i,j])
 
 ##########################################################################################################
+
+def save_images(saliency_map, ellipses):
+    '''
+    Receives fitted ellipses and saliency maps and prints the ellipses on top of the saliency maps.
+    Input:
+        Saliency_map: a numpy array of shape batch_size x no_of_nodes x 2d matrix (grey scale image).
+        ellipses: an array of shape batch_size x no_of_nodes filled with matplotlib.patches.Ellipse.
+    '''
+    fig = plt.figure(figsize = (8,8))
+    for i in range(0, saliency_map.shape[0]):
+        for j in range(0, saliency_map.shape[1]):
+            axes = fig.add_subplot(saliency_map.shape[0], saliency_map.shape[1], saliency_map.shape[1]*i+j+1)
+            if ellipses[i,j] is not None:
+                axes.add_patch(ellipses[i,j])
+            axes.imshow(saliency_map[i,j])
+    plt.savefig('saliency.png')
+
+##########################################################################################################
+
 def get_gradients_at_node(model, node, x, learning_phase=0):
     '''
     Gets a keras model and returns the gradient of a node with respect to the input layer at point x
