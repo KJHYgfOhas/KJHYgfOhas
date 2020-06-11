@@ -22,8 +22,8 @@ BATCH_SIZE = 16
 
 def cifar_main():
     
-    cifar_model_path = 'section_4.1/models/baseline_models/baseline_cifar10_depth18.h5'
-    cifar_dataset_path = 'section_4.1/data/CIFAR-10_test.h5'
+    cifar_model_path = 'image_classification/models/baseline_models/baseline_cifar10_depth18.h5'
+    cifar_dataset_path = 'image_classification/data/CIFAR-10_test.h5'
     cifar_model = load_model(cifar_model_path, custom_objects={'BilinearInterpolate3D':BilinearInterpolate3D})
 
     opt_rms = RMSprop(lr=0.001,decay=1e-6)

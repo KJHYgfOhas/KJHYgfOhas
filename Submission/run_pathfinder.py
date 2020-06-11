@@ -22,7 +22,7 @@ tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
 BATCH_SIZE = 16
 
 def pathfinder_main():
-    pathfinder_model_path = 'section_4.5/models/orthogonal_models/orthogonal_pathfinder14_kernelsize20'
+    pathfinder_model_path = 'Pathfinder/models/orthogonal_models/orthogonal_pathfinder14_kernelsize20'
     untar = not bool(pathfinder_model_path.find('.h5')+1)
 
     if untar:
@@ -47,7 +47,7 @@ def pathfinder_main():
 
     pathfinder_model.summary()
 
-    pathfinder_dataset_path = 'section_4.5/data/pathfinder_path14_test.h5'
+    pathfinder_dataset_path = 'Pathfinder/data/pathfinder_path14_test.h5'
 
     # Load dataset
     x_test, y_test = read_h5_dataset(pathfinder_dataset_path, scale = False)
