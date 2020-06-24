@@ -1,0 +1,9 @@
+model_id,nr_parameters,loss_imagenet,acc_imagenet,top_1_accuracy_imagenet,top_5_accuracy_imagenet,loss_stylised,acc_stylised,top_1_accuracy_stylised,top_5_accuracy_stylised
+cnn0_netx5_cubic,2957012,2.2411,0.4937,0.4937,0.7392,8.6724,0.0317,0.0317,0.0883
+cnn1_netx4_cubic,2957012,2.0622,0.5252,0.5252,0.7687,8.775,0.0246,0.0246,0.0701
+cnn2_netx3_cubic,2957012,1.9738,0.5447,0.5447,0.7823,9.0727,0.0205,0.0205,0.063
+cnn3_netx2_cubic,2957012,2.0718,0.5255,0.5255,0.7662,9.307,0.0154,0.0154,0.0477
+cnn4_netx1_cubic,2957012,2.623,0.4265,0.4265,0.6773,9.5425,0.0104,0.0104,0.0359
+cnn5_netx0_cubic,2957012,2.72,0.412,0.412,0.6652,9.894,0.0098,0.0098,0.0339
+cnn2_netx3_non_cubic,4009169,1.699,0.6015,0.6015,NA,NA,NA,NA,NA
+cnn0_netx5_non_cubic,3550383,NA,0.544,0.544,NA,NA,NA,NA,NA
