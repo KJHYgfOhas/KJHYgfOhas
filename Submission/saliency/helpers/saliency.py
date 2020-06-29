@@ -23,7 +23,7 @@ def visualize_saliency_map(image_3d):
     return (image_2d - vmin) / (vmax - vmin)
 
 #########################################################################################################
-def get_saliency_maps_and_fitted_ellipses(model, layers_index_list, no_of_nodes, image, scale_in_std = 2):
+def get_saliency_maps_and_fitted_ellipses(model, layers_index_list, no_of_nodes, image, scale_in_std = 3):
     '''
     The main api procedure to call when fitting covariance error ellipses to saliency maps. It receives a model, the layers
     saliency is to be calculated and the number of nodes to be sampled from each layer. The saliency is to be calculated at the
@@ -172,6 +172,7 @@ def print_images(saliency_map, ellipses):
         Saliency_map: a numpy array of shape batch_size x no_of_nodes x 2d matrix (grey scale image).
         ellipses: an array of shape batch_size x no_of_nodes filled with matplotlib.patches.Ellipse.
     '''
+    plt.close('all')
     fig = plt.figure(figsize = (8,8))
     for i in range(0, saliency_map.shape[0]):
         for j in range(0, saliency_map.shape[1]):
@@ -179,7 +180,6 @@ def print_images(saliency_map, ellipses):
             if ellipses[i,j] is not None:
                 axes.add_patch(ellipses[i,j])
             axes.imshow(saliency_map[i,j])
-
 ##########################################################################################################
 
 def save_images(saliency_map, ellipses):
@@ -217,7 +217,7 @@ def get_gradients_at_node(model, node, x, learning_phase=0):
     return np.array(func([np.expand_dims(x, 0), learning_phase]))
 
 ##########################################################################################################
-def get_gradients_at_layers(model, layer_index_list, no_of_nodes, image):
+def get_gradients_at_layers_old(model, layer_index_list, no_of_nodes, image):
     '''
     The function get a list of layers, samples a number of nodes from each of the layers and returns the gradients of these nodes with respect to the input layer of the model evaluated on image.
     Input:
@@ -243,5 +243,42 @@ def get_gradients_at_layers(model, layer_index_list, no_of_nodes, image):
         for j, node_index in enumerate(random_nodes):
             node = output_layer[node_index]
             saliency_map[i,j] = get_gradients_at_node(model, node, image)
+    return saliency_map
+
+#########################################################################
+def get_gradients_at_layers(model, layer_index_list, no_of_nodes, image):
+    '''
+    The function get a list of layers, samples a number of nodes from each of the layers and returns the gradients of these nodes with respect to the input layer of the model evaluated on image.
+    Input:
+        model: the model on which the gradients are evaluated - an instance of tensorflow.keras.models.Model
+        layer_index_list: a list of integers - specifies the indices of layers.
+        no_of_nodes: a positive integer - specifies the number of nodes to be sampled from each of the layers.
+        image: the input image on which the gradients are to be evaluated.
+    Output: 
+        a numpy array of shape (no_of_layers, no_of_nodes, shape_of_inputs_to_the_model) that contains the calculated gradients.
+    '''
+
+    input_layer = model.input
+    shape = (len(layer_index_list), no_of_nodes,) + K.int_shape(input_layer)[1:]
+
+    saliency_map = np.empty(shape = shape)
+    saliency_map[:] = np.nan
+
+    for i, layer in enumerate(layer_index_list):
+        output_layer = K.flatten(model.layers[layer].output[0, :])
+        no_of_outputs = K.int_shape(output_layer)[0]
+
+        count = 0
+
+        while count < no_of_nodes:
+            node_index = np.random.randint(low = 0, high = no_of_outputs, size = 1)[0]
+            eval_node = K.function(input_layer, output_layer[node_index])
+            value = eval_node(np.reshape(image, (1,)+ image.shape))
+            if value <= 0:
+                continue
+            else:    
+                node = output_layer[node_index]
+                saliency_map[i, count] = get_gradients_at_node(model, node, image)
+                count += 1
     return saliency_map
 
